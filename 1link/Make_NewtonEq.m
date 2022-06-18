@@ -74,6 +74,58 @@ seg1_a_com_global = formula( diff(seg1_v_com_global, t) );
 fprintf('check (45)\n')
 simplify_subs_pre( (seg1_v_bottom_global - seg1_top_v_)' - cross( omega1_global', (seg1_bottom_global - seg1_top_)') )
 
+%% calc Omega on local axes
+% Omega_local = subs( dR * R', syms_Replaced, syms_Replacing );
+Omega_local = dR * R';
+
+fprintf('check if the diag of Omega is 0\n')
+simplify_subs_pre( diag(Omega_local) )
+
+% assume that Omega = [ 
+%     0,          omega_z,    -omega_y;
+%     -omega_z,   0,          omega_x;
+%     omega_y,    -omega_x,   0;
+%     ]
+% refer to (53) and (55)
+omega1_x = Omega_local(2, 3);
+omega1_y = Omega_local(3, 1);
+omega1_z = Omega_local(1, 2);
+
+% define omega1 on global axes
+omega1_local = [omega1_x, omega1_y, omega1_z];
+
+fprintf('check (65)\n')
+simplify_subs_pre( omega1_local' - R*omega1_global' )
+
+%% check hirashima supplementary
+% note that the R in hirashima supplementary
+% is equal to the R' in EularAngle_Lagrangian.pdf
+x = R(1,:); dx = dR(1,:);
+y = R(2,:); dy = dR(2,:);
+z = R(3,:); dz = dR(3,:);
+omega_tmp = dy*z' * x + dz*x' * y + dx*y' * z;
+
+fprintf('check segment angular velocity')
+simplify_subs_pre( omega_tmp' - omega1_global' )
+
+ii = x; dii = diff( ii, t );
+jj = cross( [0, 0, 1], ii ); djj = diff( jj, t );
+kk = cross( ii, jj ); dkk = diff( kk, t );
+
+Omega_tmp = djj*kk' * ii + dkk*ii' * jj + dii*jj' * kk;
+
+fprintf('see if omega1_local is equal to Omega1 of hirashima supp')
+simplify_subs_pre( omega1_local' - Omega_tmp' )
+
+fprintf('check (S7)')
+simplify_subs_pre( ...
+    alpha1_global' - 0 ...
+    - alpha1_' ...
+    - cross( Omega_tmp', omega1_' ) ...
+    )
+
+return
+
 %% define Inertia on global axes
 % refer to (10) of tensor_of_inertia_rot.pdf
 % note that I' of tensor_of_inertia_rot.pdf is inertia on global axes
